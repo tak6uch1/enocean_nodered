@@ -1,0 +1,185 @@
+[
+    {
+        "id": "ed44a88e9520e893",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2de69e21.268362",
+        "type": "function",
+        "z": "ed44a88e9520e893",
+        "name": "EnOcean data_chg",
+        "func": "// データそのもの\nvar buf = msg.payload;\n// データのコピー（検証用）\nvar rawData = buf.slice( 0 , buf.length  );\n// 取り出しやすいようにhex変換したもの\nvar rawByte = buf.toString( \"hex\" );\n// ESP3仕様のdataLengthを拾う\nvar dataLength = 255 * buf[ 1 ] + buf[ 2 ];\n// ESP3仕様のoptionalLengthを拾う\nvar optionalLength = buf[ 3 ];\n// packetType\nvar packetType = buf[ 4 ];\n// headerCRC\nvar headerCRC = buf[ 5 ];\n// dataLengthに基づいたデータ部分の切り出し\nvar rawDataByte = buf.slice( 7 , 7 + dataLength+2);\n\n//var id = rawDataByte.slice( 0 , 4 ).toString( \"hex\" );\n\n// payloadに格納\nmsg.payload = {\n    rawData:rawData,\n    rawByte:rawByte,\n    dataLength:dataLength,\n    optionalLength:optionalLength,\n    packetType:packetType,\n    headerCRC:headerCRC,\n    rawDataByte:rawDataByte,\n  //  ID:id\n}\n\n\n\n    return msg;\n\n\n\n   ",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 910,
+        "y": 600,
+        "wires": [
+            [
+                "82fc97c8.f702d8"
+            ]
+        ]
+    },
+    {
+        "id": "82fc97c8.f702d8",
+        "type": "function",
+        "z": "ed44a88e9520e893",
+        "name": "PTM210",
+        "func": "\nmsg.id = msg.payload.rawDataByte.slice( 0 , 4 ).toString( \"hex\" );\nmsg.ptm210 = msg.payload.rawDataByte[4]-128;\nmsg.dbm = msg.payload.rawDataByte[7]*-1;\nmsg.type=\"PTM210\";\n   return msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1100,
+        "y": 600,
+        "wires": [
+            [
+                "d47fdbd1.40bc28"
+            ]
+        ]
+    },
+    {
+        "id": "1b4c2bde.81d674",
+        "type": "comment",
+        "z": "ed44a88e9520e893",
+        "name": "serial について",
+        "info": "# COM設定\n## 入力\n入力の分割方法 ：タイムアウト　１００ｍS\n分割後の配信データ：バイナリ―バッファ\n\n\n参考：\nNode-REDのserialノードを使ってEnOceanのスイッチデータを受信してみた\nhttps://digital-light.jp/2017/10/13/received-enocean-data-by-using-serialport-node/\n",
+        "x": 520,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "d47fdbd1.40bc28",
+        "type": "switch",
+        "z": "ed44a88e9520e893",
+        "name": "ID",
+        "property": "id",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "eq",
+                "v": "00XXXXXX",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 1,
+        "x": 1250,
+        "y": 600,
+        "wires": [
+            [
+                "01d6a358e13f8aba",
+                "adc2ef12553e7523"
+            ]
+        ]
+    },
+    {
+        "id": "d7202222461a2c63",
+        "type": "serial in",
+        "z": "ed44a88e9520e893",
+        "name": "",
+        "serial": "28b07b51ddd57be8",
+        "x": 710,
+        "y": 600,
+        "wires": [
+            [
+                "2de69e21.268362"
+            ]
+        ]
+    },
+    {
+        "id": "01d6a358e13f8aba",
+        "type": "debug",
+        "z": "ed44a88e9520e893",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "ptm210",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1440,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "adc2ef12553e7523",
+        "type": "function",
+        "z": "ed44a88e9520e893",
+        "name": "",
+        "func": "msg.payload = {\n    val: msg.ptm210\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1420,
+        "y": 600,
+        "wires": [
+            [
+                "c323bc0e81f9508d",
+                "80ed75f1f5910b0b"
+            ]
+        ]
+    },
+    {
+        "id": "c323bc0e81f9508d",
+        "type": "debug",
+        "z": "ed44a88e9520e893",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1580,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "80ed75f1f5910b0b",
+        "type": "pythonshell in",
+        "z": "ed44a88e9520e893",
+        "name": "Add CSV",
+        "pyfile": "/home/pi/work/EnOcean/addCsv.py",
+        "virtualenv": "",
+        "continuous": true,
+        "stdInData": true,
+        "x": 1620,
+        "y": 600,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "28b07b51ddd57be8",
+        "type": "serial-port",
+        "serialport": "/dev/ttyUSB0",
+        "serialbaud": "57600",
+        "databits": "8",
+        "parity": "none",
+        "stopbits": "1",
+        "waitfor": "",
+        "dtr": "none",
+        "rts": "none",
+        "cts": "none",
+        "dsr": "none",
+        "newline": "100",
+        "bin": "bin",
+        "out": "time",
+        "addchar": "",
+        "responsetimeout": "10000"
+    }
+]
