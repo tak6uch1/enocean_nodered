@@ -153,7 +153,7 @@
         "type": "pythonshell in",
         "z": "ed44a88e9520e893",
         "name": "Add CSV",
-        "pyfile": "/home/pi/work/EnOcean/addCsv.py",
+        "pyfile": "/home/pi/work/enocean_nodered/addCsv.py",
         "virtualenv": "",
         "continuous": true,
         "stdInData": true,
